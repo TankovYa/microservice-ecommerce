@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  products-service:
+    build:
+      context: ./products-service
+      dockerfile: Dockerfile
+    container_name: products-service
+    ports:
+      - "5001:5001"
+    environment:
+      - NODE_ENV=development
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  orders-service:
+    build: ./orders-service
+    container_name: orders-service
+    ports:
+      - "5002:5002"
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  customers-service:
+    build: ./customers-service
+    container_name: customers-service
+    ports:
+      - "5003:5003"
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "5004:5004"
+    networks:
+      - ecommerce-network
+    depends_on:
+      products-service:
+        condition: service_started
+      orders-service:
+        condition: service_started
+      customers-service:
+        condition: service_started
+    restart: unless-stopped
+
+  web-ui:
+    build: ./web-ui
+    container_name: web-ui
+    ports:
+      - "8000:8000"
+    networks:
+      - ecommerce-network
+    depends_on:
+      api-gateway:
+        condition: service_started
+    restart: unless-stopped
+
+networks:
+  ecommerce-network:
+    driver: bridge
